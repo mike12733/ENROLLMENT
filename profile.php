@@ -135,9 +135,9 @@ $user = $stmt->fetch();
                                 <hr>
                                 
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-primary" onclick="changePassword()">
+                                    <a href="change_password.php" class="btn btn-primary">
                                         <i class="fas fa-key"></i> Change Password
-                                    </button>
+                                    </a>
                                     <a href="index.php" class="btn btn-secondary">
                                         <i class="fas fa-arrow-left"></i> Back to Dashboard
                                     </a>

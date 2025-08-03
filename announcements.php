@@ -28,6 +28,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['create_announcement'])
     }
 }
 
+// Handle edit announcement
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_announcement'])) {
+    $id = $_POST['announcement_id'];
+    $title = trim($_POST['title']);
+    $content = trim($_POST['content']);
+    
+    if (empty($title) || empty($content)) {
+        $error = 'Title and content are required.';
+    } else {
+        if (updateAnnouncement($id, $title, $content)) {
+            $success = 'Announcement updated successfully!';
+        } else {
+            $error = 'Failed to update announcement.';
+        }
+    }
+}
+
+// Handle delete announcement
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_announcement'])) {
+    $id = $_POST['announcement_id'];
+    
+    if (deleteAnnouncement($id)) {
+        $success = 'Announcement deleted successfully!';
+    } else {
+        $error = 'Failed to delete announcement.';
+    }
+}
+
 $announcements = getAllAnnouncements();
 ?>
 
@@ -94,14 +122,16 @@ $announcements = getAllAnnouncements();
                 </div>
                 
                 <?php if ($success): ?>
-                    <div class="alert alert-success">
+                    <div class="alert alert-success alert-dismissible fade show">
                         <i class="fas fa-check-circle"></i> <?php echo $success; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
                 
                 <?php if ($error): ?>
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger alert-dismissible fade show">
                         <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
                 
@@ -120,11 +150,11 @@ $announcements = getAllAnnouncements();
                                 <div class="card-footer">
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                data-bs-toggle="modal" data-bs-target="#editModal<?php echo $announcement['id']; ?>">
+                                                onclick="editAnnouncement(<?php echo $announcement['id']; ?>, '<?php echo addslashes($announcement['title']); ?>', '<?php echo addslashes($announcement['content']); ?>')">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $announcement['id']; ?>">
+                                                onclick="deleteAnnouncement(<?php echo $announcement['id']; ?>, '<?php echo addslashes($announcement['title']); ?>')">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
                                     </div>
@@ -173,7 +203,86 @@ $announcements = getAllAnnouncements();
         </div>
     </div>
 
+    <!-- Edit Announcement Modal -->
+    <div class="modal fade" id="editAnnouncementModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Announcement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit_announcement_id" name="announcement_id">
+                        <div class="mb-3">
+                            <label for="edit_title" class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="edit_title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_content" class="form-label">Content *</label>
+                            <textarea class="form-control" id="edit_content" name="content" rows="6" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="edit_announcement" class="btn btn-primary">Update Announcement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Announcement Modal -->
+    <div class="modal fade" id="deleteAnnouncementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Announcement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this announcement?</p>
+                    <p><strong>Title:</strong> <span id="delete_announcement_title"></span></p>
+                </div>
+                <form method="POST">
+                    <div class="modal-footer">
+                        <input type="hidden" id="delete_announcement_id" name="announcement_id">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="delete_announcement" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/script.js"></script>
+    <script>
+        function editAnnouncement(id, title, content) {
+            document.getElementById('edit_announcement_id').value = id;
+            document.getElementById('edit_title').value = title;
+            document.getElementById('edit_content').value = content;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editAnnouncementModal'));
+            modal.show();
+        }
+
+        function deleteAnnouncement(id, title) {
+            document.getElementById('delete_announcement_id').value = id;
+            document.getElementById('delete_announcement_title').textContent = title;
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteAnnouncementModal'));
+            modal.show();
+        }
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
